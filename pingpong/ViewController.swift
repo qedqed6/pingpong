@@ -214,6 +214,15 @@ class ViewController: UIViewController {
         rightServeLabel.isHidden = (value.serve != .right)
     }
     
+    func alertRoundEndMessage(checkedHandler: @escaping () -> Void) {
+        let controller = UIAlertController(title: "", message: "此局結束", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+            checkedHandler()
+        }
+        controller.addAction(okAction)
+        present(controller, animated: true, completion: nil)
+    }
+    
     @IBAction func rewindButtonTouchUpInside(_ sender: UIButton) {
         _ = game.pop()
         guard let currentFrame = game.last else {
@@ -250,13 +259,7 @@ class ViewController: UIViewController {
         
         game.push(currentFrame)
         updateScreen(show: alertFrame)
-        
-        let controller = UIAlertController(title: "", message: "此局結束", preferredStyle: .alert)
-        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-        controller.addAction(okAction)
-        present(controller, animated: true) {
-            self.updateScreen(show: currentFrame)
-        }
+        alertRoundEndMessage{ self.updateScreen(show: currentFrame) }
     }
     
     @IBAction func rightPointsButtonTouchUpInside(_ sender: UIButton) {
@@ -272,13 +275,7 @@ class ViewController: UIViewController {
         
         game.push(currentFrame)
         updateScreen(show: alertFrame)
-        
-        let controller = UIAlertController(title: "", message: "此局結束", preferredStyle: .alert)
-        let okAction = UIAlertAction(title: "OK", style: .default, handler: nil)
-        controller.addAction(okAction)
-        present(controller, animated: true) {
-            self.updateScreen(show: currentFrame)
-        }
+        alertRoundEndMessage{ self.updateScreen(show: currentFrame) }
     }
     
     @IBAction func leftRoundsButtonTouchUpInside(_ sender: UIButton) {
