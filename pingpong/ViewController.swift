@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 class ViewController: UIViewController {
     @IBOutlet weak var leftPointsButton: UIButton!
@@ -17,6 +18,56 @@ class ViewController: UIViewController {
     @IBOutlet weak var rewindButton: UIButton!
     @IBOutlet weak var changeSideButton: UIButton!
     @IBOutlet weak var resetButton: UIButton!
+    
+    // Create a speech synthesizer.
+    var synthesizer = AVSpeechSynthesizer()
+    let voice = AVSpeechSynthesisVoice(language: "zh-TW")
+    let volume: Float = 0.8
+    
+    func roundEndVoice(saySomething: String?) {
+        let roundEndUtterance: AVSpeechUtterance
+        if saySomething == nil {
+            roundEndUtterance = AVSpeechUtterance(string: "此局結束")
+            roundEndUtterance.rate = 0.4
+            roundEndUtterance.pitchMultiplier = 0.8
+            roundEndUtterance.postUtteranceDelay = 0.2
+        } else {
+            roundEndUtterance = AVSpeechUtterance(string: saySomething!)
+            roundEndUtterance.rate = 0.6
+            roundEndUtterance.pitchMultiplier = 1.2
+            roundEndUtterance.postUtteranceDelay = 0.3
+        }
+        
+        roundEndUtterance.volume = volume
+        roundEndUtterance.voice = voice
+        
+        if synthesizer.isSpeaking {
+            print(synthesizer.stopSpeaking(at: .immediate))
+        }
+        synthesizer.speak(roundEndUtterance)
+    }
+    
+    func pointVoice(_ person: String) {
+        let roundEndUtterance = AVSpeechUtterance(string: "\(person)得分")
+        roundEndUtterance.rate = 0.55
+        roundEndUtterance.pitchMultiplier = 1.0
+        roundEndUtterance.postUtteranceDelay = 0.2
+        roundEndUtterance.volume = volume
+        roundEndUtterance.voice = voice
+
+        synthesizer.speak(roundEndUtterance)
+    }
+    
+    func changeSideVoice() {
+        let roundEndUtterance = AVSpeechUtterance(string: "換邊")
+        roundEndUtterance.rate = 0.50
+        roundEndUtterance.pitchMultiplier = 0.90
+        roundEndUtterance.postUtteranceDelay = 0.2
+        roundEndUtterance.volume = volume
+        roundEndUtterance.voice = voice
+
+        synthesizer.speak(roundEndUtterance)
+    }
     
     struct PushDropStack<T> {
         var elements: [T] = []
@@ -178,40 +229,53 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        var pointButtonAttribute = AttributedString("0")
-        pointButtonAttribute.font = UIFont.systemFont(ofSize: 100)
-        leftPointsButton.configuration?.attributedTitle = pointButtonAttribute
-        rightPointsButton.configuration?.attributedTitle = pointButtonAttribute
-        
-        var roundButtonAttribute = AttributedString("0")
-        roundButtonAttribute.font = UIFont.systemFont(ofSize: 80)
-        leftRoundsButton.configuration?.attributedTitle = roundButtonAttribute
-        rightRoundsButton.configuration?.attributedTitle = roundButtonAttribute
-        
         let firstFrame = Frame()
         game.push(firstFrame)
         updateScreen(show: firstFrame)
+        
     }
 
-    func updateScreen(show value: Frame) {
-        var attribute = AttributedString("\(value.leftPoints)")
-        attribute.font = UIFont.systemFont(ofSize: 100)
+    func updateScreen(show frame: Frame) {
+        var attribute = AttributedString("\(frame.leftPoints)")
+        attribute.font = UIFont.systemFont(ofSize:  150)
         leftPointsButton.configuration?.attributedTitle = attribute
+        leftPointsButton.tintColor = .white
         
-        attribute = AttributedString("\(value.rightPoints)")
-        attribute.font = UIFont.systemFont(ofSize: 100)
+        attribute = AttributedString("\(frame.rightPoints)")
+        attribute.font = UIFont.systemFont(ofSize: 150)
         rightPointsButton.configuration?.attributedTitle = attribute
+        rightPointsButton.tintColor = .white
         
-        attribute = AttributedString("\(value.leftRounds)")
+        attribute = AttributedString("\(frame.leftRounds)")
         attribute.font = UIFont.systemFont(ofSize: 80)
         leftRoundsButton.configuration?.attributedTitle = attribute
+        leftRoundsButton.tintColor = .white
         
-        attribute = AttributedString("\(value.rightRounds)")
+        attribute = AttributedString("\(frame.rightRounds)")
         attribute.font = UIFont.systemFont(ofSize: 80)
         rightRoundsButton.configuration?.attributedTitle = attribute
+        rightRoundsButton.tintColor = .white
         
-        leftServeLabel.isHidden = (value.serve != .left)
-        rightServeLabel.isHidden = (value.serve != .right)
+        leftServeLabel.isHidden = (frame.serve != .left)
+        leftServeLabel.textColor = .blue
+        
+        rightServeLabel.isHidden = (frame.serve != .right)
+        rightServeLabel.textColor = .blue
+        
+        attribute = AttributedString("上一步")
+        attribute.font = UIFont.systemFont(ofSize: 17)
+        rewindButton.configuration?.attributedTitle = attribute
+        rewindButton.tintColor = .white
+        
+        attribute = AttributedString("換邊")
+        attribute.font = UIFont.systemFont(ofSize: 17)
+        changeSideButton.configuration?.attributedTitle = attribute
+        changeSideButton.tintColor = .white
+        
+        attribute = AttributedString("重置")
+        attribute.font = UIFont.systemFont(ofSize: 17)
+        resetButton.configuration?.attributedTitle = attribute
+        resetButton.tintColor = .red
     }
     
     func alertRoundEndMessage(checkedHandler: @escaping () -> Void) {
@@ -235,6 +299,8 @@ class ViewController: UIViewController {
         guard var currentFrame = game.last else {
             return
         }
+        changeSideVoice()
+        
         currentFrame.changeSide()
         game.push(currentFrame)
         updateScreen(show: currentFrame)
@@ -250,7 +316,7 @@ class ViewController: UIViewController {
         guard var currentFrame = game.last else {
             return
         }
-        
+        pointVoice("左邊")
         guard let alertFrame = currentFrame.addLeftPoints() else {
             game.push(currentFrame)
             updateScreen(show: currentFrame)
@@ -260,6 +326,7 @@ class ViewController: UIViewController {
         game.push(currentFrame)
         updateScreen(show: alertFrame)
         alertRoundEndMessage{ self.updateScreen(show: currentFrame) }
+        roundEndVoice(saySomething: "右邊，你阿庫雅嗎？")
     }
     
     @IBAction func rightPointsButtonTouchUpInside(_ sender: UIButton) {
@@ -267,6 +334,7 @@ class ViewController: UIViewController {
             return
         }
         
+        pointVoice("右邊")
         guard let alertFrame = currentFrame.addRightPoints() else {
             game.push(currentFrame)
             updateScreen(show: currentFrame)
@@ -276,6 +344,12 @@ class ViewController: UIViewController {
         game.push(currentFrame)
         updateScreen(show: alertFrame)
         alertRoundEndMessage{ self.updateScreen(show: currentFrame) }
+        
+        if currentFrame.rightRounds >= (currentFrame.leftRounds + 2) {
+            roundEndVoice(saySomething: "愛麗絲女神在我這邊拉！")
+        } else {
+            roundEndVoice(saySomething: nil)
+        }
     }
     
     @IBAction func leftRoundsButtonTouchUpInside(_ sender: UIButton) {
