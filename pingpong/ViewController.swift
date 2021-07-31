@@ -171,15 +171,15 @@ class ViewController: UIViewController {
     }
     
     enum ScenesMode {
-        case drak
+        case dark
         case light
         
         func change() -> ScenesMode {
             switch self {
-            case .drak:
+            case .dark:
                 return .light
             case .light:
-                return .drak
+                return .dark
             }
         }
     }
@@ -189,7 +189,7 @@ class ViewController: UIViewController {
         var roundServe = Side.left
         var serve = Side.left
         var servesCounts = 0
-        var scenesMode = ScenesMode.drak
+        var scenesMode = ScenesMode.dark
         
         var deuce = false
         var leftRounds = 0
@@ -240,7 +240,6 @@ class ViewController: UIViewController {
         }
         
         func getRemainingServeCounts() -> Int? {
-            
             if self.deuce && (self.servesCounts >= 0) && (self.servesCounts <= 1) {
                 return (1 - self.servesCounts)
             }
@@ -363,6 +362,8 @@ class ViewController: UIViewController {
         let firstFrame = GameFrame()
         game.push(firstFrame)
         updateScreen(show: firstFrame, ballsUpdate: true)
+        
+        print(MemoryLayout<ScenesMode>.size)
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -378,7 +379,7 @@ class ViewController: UIViewController {
         let controlColor: UIColor
         
         switch frame.scenesMode {
-        case .drak:
+        case .dark:
             boardBackgroundColor = .systemGray3
             pointsBackgroundColor = .systemGray
             roundsBackgroundColor = .systemGray
@@ -440,7 +441,7 @@ class ViewController: UIViewController {
         switch frame.scenesMode {
         case .light:
             scenesButtonImageName = "moon"
-        case .drak:
+        case .dark:
             scenesButtonImageName = "moon.fill"
         }
         scenesModeButton.tintColor = controlColor
